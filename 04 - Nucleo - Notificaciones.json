@@ -1,0 +1,435 @@
+{
+  "name": "04 - Nucleo - Notificaciones",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "cond-tel-est",
+                    "leftValue": "={{ $json.canal }}",
+                    "rightValue": "telegram_estudiante",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram_estudiante"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "cond-tel-tut",
+                    "leftValue": "={{ $json.canal }}",
+                    "rightValue": "telegram_tutor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "telegram_tutor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "cond-correo",
+                    "leftValue": "={{ $json.canal }}",
+                    "rightValue": "correo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "correo"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -448,
+        464
+      ],
+      "id": "8af26964-95de-48f9-925f-6e21f13709fd",
+      "name": "Switch - canal"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.destinatario }}",
+        "subject": "={{ $json.asunto }}",
+        "message": "={{ $json.mensaje }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        864
+      ],
+      "id": "ddbe8e9d-eac3-42d5-a298-aad066096d11",
+      "name": "Gmail - Correo",
+      "webhookId": "78c52387-3950-4df5-a444-3622286313bd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJflfWY1COZZwGVy",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-ok-est",
+              "name": "enviado",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a38874fc-40d6-4556-9869-627e856a05c5",
+      "name": "Set - Exito Estudiante"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-err-est-1",
+              "name": "enviado",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "set-err-est-2",
+              "name": "error",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        192
+      ],
+      "id": "e2284d48-a60d-44c8-bf46-3cb01865f20b",
+      "name": "Set - Error Estudiante"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-ok-tut",
+              "name": "enviado",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        384
+      ],
+      "id": "2e8ca2f1-0952-4280-91d0-c582dac5bf63",
+      "name": "Set - Exito Tutor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-err-tut-1",
+              "name": "enviado",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "set-err-tut-2",
+              "name": "error",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        576
+      ],
+      "id": "83187e0d-6ed9-46a6-8d29-2a9c4798a59f",
+      "name": "Set - Error Tutor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-ok-correo",
+              "name": "enviado",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        768
+      ],
+      "id": "06f5ba23-367d-46c3-aa13-144a85a35996",
+      "name": "Set - Exito Correo"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-err-correo-1",
+              "name": "enviado",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "set-err-correo-2",
+              "name": "error",
+              "value": "={{ $json.error.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        960
+      ],
+      "id": "7fe01b18-aefc-4da2-a618-fd4bd8d582b8",
+      "name": "Set - Error Correo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8701934614:AAEyFSLS813W4EhB235rIQNNH2Lg-NOcLuI/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"chat_id\": $json.destinatario, \"text\": $json.mensaje, ...($json.botones && $json.botones.length ? { \"reply_markup\": { \"inline_keyboard\": [ $json.botones.map(b => ({ text: b.text, callback_data: b.callback_data })) ] } } : {}) } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "79cd56b1-2077-401e-9c0b-e30401bbf8ce",
+      "name": "Telegram - Estudiante",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot8701934614:AAEyFSLS813W4EhB235rIQNNH2Lg-NOcLuI/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"chat_id\": $json.destinatario, \"text\": $json.mensaje, ...($json.botones && $json.botones.length ? { \"reply_markup\": { \"inline_keyboard\": [ $json.botones.map(b => ({ text: b.text, callback_data: b.callback_data })) ] } } : {}) } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -224,
+        480
+      ],
+      "id": "2f502f0e-e6bd-4d16-a0ec-591b17b32c2d",
+      "name": "Telegram - Tutor",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "642c5fa9-7167-43be-b8c6-da89b09c5e2a",
+      "name": "Trigger - Notificaciones",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        480
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch - canal": {
+      "main": [
+        [
+          {
+            "node": "Telegram - Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram - Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail - Correo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Correo": {
+      "main": [
+        [
+          {
+            "node": "Set - Exito Correo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Error Correo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger - Notificaciones": {
+      "main": [
+        [
+          {
+            "node": "Switch - canal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Estudiante": {
+      "main": [
+        [
+          {
+            "node": "Set - Exito Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Error Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram - Tutor": {
+      "main": [
+        [
+          {
+            "node": "Set - Exito Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Error Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c1e37754-ff77-4542-8a4a-6c62eaa68564",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98bf38eac937aa695b5f9e7c19686dd120519b65f5840d813595167290932874"
+  },
+  "nodeGroups": [],
+  "id": "CPhbpzoAmwBaqt5B",
+  "tags": []
+}

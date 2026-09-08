@@ -1,0 +1,470 @@
+{
+  "name": "06 - Estudiante - Router (entrada)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "id": "9a3f2d3d-462a-4710-9c0a-5b76205c6139",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        96
+      ],
+      "webhookId": "e992f2d2-e44a-46df-9fab-3793c19a766d",
+      "credentials": {
+        "telegramApi": {
+          "id": "DJ2sIfq8Y9r8Gwpl",
+          "name": "Telegram - Bot Examen 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: {\n  telegram_user: String($json.message.chat.id),\n  mensaje: $json.message.text || ''\n}};"
+      },
+      "id": "7923ba7f-2f76-47e5-80b6-1adbfa995850",
+      "name": "Code - Extraer Mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.flujo_actual }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "id": "8196410d-736a-490e-9f28-8159e24433d8"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "99e70391-acbc-4b07-9c11-f51636bf59cc",
+      "name": "IF - Flujo Activo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1PR6LqHZ2gpEFlrfp_CQyMcbogXnFCsfTeBVRdWtqKH4",
+          "mode": "list",
+          "cachedResultName": "ESTUDIANTES"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "telegram_user",
+              "lookupValue": "={{ $('Code - Extraer Mensaje').first().json.telegram_user }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4972c2fd-fa9d-4fd1-8fe0-e1543586e40a",
+      "name": "Sheets - Get Estudiante",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        192
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1b7DDDvIFNETcgjH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.callback_query !== undefined && $json.callback_query !== null }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              },
+              "rightValue": "",
+              "id": "2d268175-9d63-4b17-962a-539fe3e56523"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7c37245e-1c36-4ad7-a4ec-bc30d7ca79ea",
+      "name": "IF - Es Callback",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        96
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json.callback_query.data || '';\nconst partes = data.split(':');\nconst tipo = partes[0];\nconst valor = partes[1];\nlet mensaje = valor;\nif (tipo === 'yes_no') {\n  mensaje = valor === 'si' ? 'si' : 'no';\n}\nreturn { json: {\n  telegram_user: String($json.callback_query.from.id),\n  mensaje\n}};"
+      },
+      "id": "96a9fa43-dd85-40b8-ae6c-03f9a579b14a",
+      "name": "Code - Extraer Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vjpqSBQpKwHEi8kM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vjpqSBQpKwHEi8kM",
+          "cachedResultName": "01 - Nucleo - Administrador de Sesiones"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "accion": "obtener",
+            "telegram_user": "={{ $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "b9ee97ec-3ffb-42bc-8c6e-4eef4544c62d",
+      "name": "Sub-workflow - Sesion Obtener",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Jpm6ayFiRxrvIQJB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Jpm6ayFiRxrvIQJB",
+          "cachedResultName": "08 - Estudiante - Registro (wizard chat)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "telegram_user": "={{ $('Code - Extraer Mensaje').first().json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "c51080d8-8fc4-4026-b22b-ecb78491ac3a",
+      "name": "Sub-workflow - Registro Iniciar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "sxR1FOWjwonaXpEp",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/sxR1FOWjwonaXpEp",
+          "cachedResultName": "05 - Nucleo - Procesador de Pasos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "mensaje": "={{ $('Code - Extraer Mensaje').isExecuted ? $('Code - Extraer Mensaje').first().json.mensaje : $('Code - Extraer Callback').first().json.mensaje }}",
+            "telegram_user": "={{ $('Code - Extraer Mensaje').isExecuted ? $('Code - Extraer Mensaje').first().json.telegram_user : $('Code - Extraer Callback').first().json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "4e7c5524-4136-49a7-9c14-f8071ba827dd",
+      "name": "Sub-workflow - Procesador (continuar flujo)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "WqWN6NerbLy6uwet",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/WqWN6NerbLy6uwet",
+          "cachedResultName": "07 - Estudiante - Clasificador de Intencion (IA)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "estudiantes": "={{ $json.estudiantes }}",
+            "mensaje": "={{ $('Code - Extraer Mensaje').isExecuted ? $('Code - Extraer Mensaje').first().json.mensaje : $('Code - Extraer Callback').first().json.mensaje }}",
+            "telegram_user": "={{ $('Code - Extraer Mensaje').isExecuted ? $('Code - Extraer Mensaje').first().json.telegram_user : $('Code - Extraer Callback').first().json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "5121a7d7-5947-45a6-b591-2cba91c5430e",
+      "name": "Sub-workflow - Clasificador Intencion",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1344,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const filas = $input.all().map(i => i.json).filter(f => f.documento);\nreturn [{ json: {\n  telegram_user: $('Code - Extraer Mensaje').isExecuted ? $('Code - Extraer Mensaje').first().json.telegram_user : $('Code - Extraer Callback').first().json.telegram_user,\n  count: filas.length,\n  estudiantes: filas\n}}];"
+      },
+      "id": "6f67a265-c2c3-407d-9794-21e636150bec",
+      "name": "Code - Evaluar Estudiantes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.count }}",
+              "operator": {
+                "operation": "equals",
+                "type": "number"
+              },
+              "rightValue": 0
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "65426a00-31e6-4acf-b277-0af0964526b3",
+      "name": "IF - Sin Ningun Estudiante",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IF - Flujo Activo": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Procesador (continuar flujo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheets - Get Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF - Es Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Es Callback": {
+      "main": [
+        [
+          {
+            "node": "Code - Extraer Callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Extraer Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Extraer Mensaje": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Sesion Obtener",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Extraer Callback": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Sesion Obtener",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Sesion Obtener": {
+      "main": [
+        [
+          {
+            "node": "IF - Flujo Activo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets - Get Estudiante": {
+      "main": [
+        [
+          {
+            "node": "Code - Evaluar Estudiantes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Evaluar Estudiantes": {
+      "main": [
+        [
+          {
+            "node": "IF - Sin Ningun Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Sin Ningun Estudiante": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Registro Iniciar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Clasificador Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "09c9e602-a935-4963-911a-2bbc76d28678",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98bf38eac937aa695b5f9e7c19686dd120519b65f5840d813595167290932874"
+  },
+  "nodeGroups": [],
+  "id": "u2Qt36KmbjRTzBZe",
+  "tags": []
+}

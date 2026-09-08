@@ -1,0 +1,474 @@
+{
+  "name": "07 - Estudiante - Clasificador de Intencion (IA)",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c475cf67-08c8-4c64-9dea-c939d6356c95",
+      "name": "Trigger - Clasificador",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1024,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.mensaje }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres un clasificador de intenciones para TutorBot, un sistema de tutorias academicas. No tienes herramientas conectadas ni debes intentar usar ninguna.\n\nClasifica el mensaje del estudiante en UNA sola de estas categorias:\n- solicitar_tutoria: quiere pedir o agendar una tutoria\n- consultar_tutorias: quiere saber el estado de sus tutorias\n- cancelar_tutoria: quiere cancelar una tutoria\n- consultar_info: quiere saber sus propios datos registrados\n- desconocido: no encaja claramente en ninguna de las anteriores\n\nEjemplos:\n\"Necesito un tutor para matematicas\" -> solicitar_tutoria\n\"Que tutorias tengo esta semana?\" -> consultar_tutorias\n\"Quiero cancelar mi cita\" -> cancelar_tutoria\n\"Que datos tengo registrados?\" -> consultar_info\n\nResponde unicamente con el JSON solicitado, sin texto adicional."
+        }
+      },
+      "id": "6da736d9-1f23-413f-92d7-9f45cf5784a8",
+      "name": "Agente - Clasificar Intencion",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -800,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "87becdf4-b64c-4b30-8383-4c2c83971e39",
+      "name": "Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        624
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Os6gSZ28NRmu6zfl",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{ \"intencion\": \"solicitar_tutoria\", \"confianza\": 0.95 }"
+      },
+      "id": "0819f3e4-76ea-43dd-8591-25cb32c18ffa",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -672,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const salida = $json.output || {};\nconst intencion = (salida.confianza >= 0.7) ? salida.intencion : 'desconocido';\nreturn { json: {\n  intencion,\n  telegram_user: $('Trigger - Clasificador').first().json.telegram_user,\n  estudiantes: $('Trigger - Clasificador').first().json.estudiantes || []\n}};"
+      },
+      "id": "a3548dd3-0e79-4b87-92d4-236a60bb679b",
+      "name": "Code - Normalizar Intencion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "solicitar_tutoria",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "solicitar_tutoria"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "consultar_tutorias",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "consultar_tutorias"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "cancelar_tutoria",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "cancelar_tutoria"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "consultar_info",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "consultar_info"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intencion }}",
+                    "rightValue": "desconocido",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "desconocido"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a29c9eba-bb69-45f1-b2af-f7488f5fe234",
+      "name": "Switch - Intencion",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xXtBZlrHoHGGt2Eq",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xXtBZlrHoHGGt2Eq",
+          "cachedResultName": "13 - Estudiante - Consultar Tutorias"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "accion": "consultar",
+            "telegram_user": "={{ $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "48bea782-bce9-4841-88de-3794db0157de",
+      "name": "Sub-workflow - Consultar Tutorias",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "nJfoRa0DTlQeEGJG",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/nJfoRa0DTlQeEGJG"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "={{ 'Completa este formulario para solicitar tu tutoria:\\nhttps://jops15021709.app.n8n.cloud/form/solicitar-tutoria-form?telegram_user=' + $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "300968fe-94ad-4b44-ab1e-bbc407f8ac3e",
+      "name": "Sub-workflow - Solicitar Tutoria",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ucriG0ZjEfB7QzRC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "={{ ($json.estudiantes && $json.estudiantes.length > 0) ? $json.estudiantes.map(e => 'Documento: ' + e.documento + '\\nNombre: ' + e.nombre).join('\\n\\n') : 'No encontre datos registrados.' }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "9e2c10c1-29d8-496a-ba07-984844881793",
+      "name": "Sub-workflow - Notificar Info",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ucriG0ZjEfB7QzRC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "No entendi tu mensaje. Esto es lo que puedo hacer por ti:\n\n- Solicitar una tutoria: escribe algo como \"necesito un tutor de matematicas\"\n- Ver tus tutorias activas: escribe \"mis tutorias\"\n- Cancelar una tutoria: escribe \"cancelar mi tutoria\"\n- Ver tus datos registrados: escribe \"mis datos\"\n\nEscribeme de nuevo con lo que necesitas."
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "4dd412da-ca4a-4ef8-be91-40ed7b9386b0",
+      "name": "Sub-workflow - Notificar Ayuda",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZIiswEMQy2KSbeVq",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/ZIiswEMQy2KSbeVq"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "={{ 'Elige cual tutoria quieres cancelar en este link:\\nhttps://jops15021709.app.n8n.cloud/form/cancelar-tutoria-form?telegram_user=' + $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "fb4f0f31-87ba-43dc-9c07-c04c7d4f6e10",
+      "name": "Sub-workflow - Cancelar Tutoria",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        384
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger - Clasificador": {
+      "main": [
+        [
+          {
+            "node": "Agente - Clasificar Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente - Clasificar Intencion": {
+      "main": [
+        [
+          {
+            "node": "Code - Normalizar Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente - Clasificar Intencion",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Agente - Clasificar Intencion",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Normalizar Intencion": {
+      "main": [
+        [
+          {
+            "node": "Switch - Intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch - Intencion": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Solicitar Tutoria",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Consultar Tutorias",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Cancelar Tutoria",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Notificar Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Notificar Ayuda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bc2ef2b6-3703-4d04-9e74-d583e6075848",
+  "meta": {
+    "instanceId": "98bf38eac937aa695b5f9e7c19686dd120519b65f5840d813595167290932874"
+  },
+  "nodeGroups": [],
+  "id": "WqWN6NerbLy6uwet",
+  "tags": []
+}

@@ -1,0 +1,682 @@
+{
+  "name": "05 - Nucleo - Procesador de Pasos",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sesion = $json;\nconst pasos = typeof sesion.pasos_restantes === 'string'\n  ? JSON.parse(sesion.pasos_restantes || '[]')\n  : (sesion.pasos_restantes || []);\nconst datosParciales = typeof sesion.datos_parciales === 'string'\n  ? JSON.parse(sesion.datos_parciales || '{}')\n  : (sesion.datos_parciales || {});\n\nreturn {\n  json: {\n    ...sesion,\n    mensaje: $('Trigger - Procesador de Pasos').item.json.mensaje,\n    telegram_user: $('Trigger - Procesador de Pasos').item.json.telegram_user,\n    pasos_restantes: pasos,\n    datos_parciales: datosParciales,\n    paso_actual: pasos.length > 0 ? pasos[0] : null\n  }\n};"
+      },
+      "id": "bc2cc040-69f1-40a3-9dcf-0cefbccb8c4a",
+      "name": "Code - Preparar Sesion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.paso_actual === null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6efa2a30-bb95-44bd-87f2-0ff25436a16a",
+      "name": "IF - Sin Pasos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.direccion_retorno }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"telegram_user\": $json.telegram_user, \"datos_parciales\": $json.datos_parciales } }}",
+        "options": {}
+      },
+      "id": "239c6040-6f3c-4e1a-bcaf-18fba532b237",
+      "name": "HTTP - Direccion Retorno",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.paso_actual.type }}",
+                    "rightValue": "yes_no",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "yes_no"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.paso_actual.type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.paso_actual.type }}",
+                    "rightValue": "form",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "form"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.paso_actual.type }}",
+                    "rightValue": "logic",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "logic"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "26f1c27f-a0ec-411e-9a24-78048d0d410f",
+      "name": "Switch - Tipo",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -1568,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const texto = String($json.mensaje || '').trim().toLowerCase();\nconst si = ['si','sí','s','yes'];\nconst no = ['no','n'];\nif (si.includes(texto)) return { json: { ...$json, valido: true, valor: true } };\nif (no.includes(texto)) return { json: { ...$json, valido: true, valor: false } };\nreturn { json: { ...$json, valido: false } };"
+      },
+      "id": "914a477d-4a76-41fc-9e3b-d8f0b527182d",
+      "name": "Code - Validar YesNo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const texto = String($json.mensaje || '').trim();\nreturn { json: { ...$json, valido: !!texto, valor: texto } };"
+      },
+      "id": "b59ad212-a3a1-4c4a-a33d-cfff413e7eb6",
+      "name": "Code - Validar Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.paso_actual.handler }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"telegram_user\": $json.telegram_user, \"mensaje\": $json.mensaje, \"datos_parciales\": $json.datos_parciales } }}",
+        "options": {}
+      },
+      "id": "5eef6a24-794c-42a2-a6d8-23a5d992f4e2",
+      "name": "HTTP - Logic Handler",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const previo = $('Switch - Tipo').item.json;\nconst respuesta = $json;\nlet pasos = previo.pasos_restantes;\nif (respuesta.nuevos_pasos && respuesta.nuevos_pasos.length > 0) {\n  pasos = [...respuesta.nuevos_pasos, ...pasos];\n}\nreturn {\n  json: {\n    ...previo,\n    pasos_restantes: pasos,\n    valido: respuesta.valido === true,\n    valor: respuesta.valor !== undefined ? respuesta.valor : null\n  }\n};"
+      },
+      "id": "530381fb-cc50-4290-8e1c-1c64125ebce5",
+      "name": "Code - Fusionar Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91b782b9-4b09-4c13-8a7d-b00d76cd0e74",
+      "name": "IF - Es Valido",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const pasos = $json.pasos_restantes;\nconst pasoProcesado = pasos.shift();\nconst datosParciales = { ...$json.datos_parciales, [pasoProcesado.step_name]: $json.valor };\n\nreturn {\n  json: {\n    telegram_user: $json.telegram_user,\n    flujo_actual: $json.flujo_actual,\n    pasos_restantes: pasos,\n    datos_parciales: datosParciales,\n    direccion_retorno: $json.direccion_retorno\n  }\n};"
+      },
+      "id": "c1a3858a-a2c7-4adc-b57a-e4450bdd5b1b",
+      "name": "Code - Shift y Guardar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Code - Shift y Guardar').item.json.pasos_restantes.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              },
+              "id": "faca62fd-f951-4ce1-8a9e-c0710972e6f7"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f31bc698-24b6-4b8f-9873-9f552b97a184",
+      "name": "IF - Quedan Pasos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "vjpqSBQpKwHEi8kM",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/vjpqSBQpKwHEi8kM",
+          "cachedResultName": "01 - Nucleo - Administrador de Sesiones"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "accion": "obtener",
+            "telegram_user": "={{ $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "29863ca1-fff4-48f6-b93c-d79fe6cc60d0",
+      "name": "Sub-workflow - Sesion Obtener",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -2240,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vjpqSBQpKwHEi8kM",
+          "cachedResultName": "01 - Nucleo - Administrador de Sesiones"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "accion": "guardar",
+            "progreso": "={{ { \"flujo_actual\": $json.flujo_actual, \"pasos_restantes\": $json.pasos_restantes, \"datos_parciales\": $json.datos_parciales, \"direccion_retorno\": $json.direccion_retorno } }}",
+            "telegram_user": "={{ $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "ca4f8c8d-c299-4013-ba69-6321cd39fb3b",
+      "name": "Sub-workflow - Sesion Guardar",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "18082d79-083e-4baf-93df-15f320e3221b",
+      "name": "Trigger - Procesador de Pasos",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2464,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "sxR1FOWjwonaXpEp",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/sxR1FOWjwonaXpEp"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "mensaje": null,
+            "telegram_user": "={{ $('Code - Shift y Guardar').item.json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "5d1bde60-0cc6-4ac7-88a6-2f6143f42eb8",
+      "name": "Sub-workflow - Auto Llamada (Continuar Wizard)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CPhbpzoAmwBaqt5B",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/CPhbpzoAmwBaqt5B"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "={{ (($json.paso_actual.mensaje && $json.paso_actual.mensaje.length > 0) ? ($json.paso_actual.mensaje + '\\n') : 'Completa tus datos aqui:\\n') + $json.paso_actual.handler + '?telegram_user=' + $json.telegram_user }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "b9174784-2966-4daa-b913-006435c57b8e",
+      "name": "Sub-workflow - Notificaciones Form",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "CPhbpzoAmwBaqt5B",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/CPhbpzoAmwBaqt5B"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "botones": "={{ $json.paso_actual.type === 'yes_no' ? [{text:'Si', callback_data:'yes_no:si'},{text:'No', callback_data:'yes_no:no'}] : [] }}",
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $json.telegram_user }}",
+            "mensaje": "={{ ($json.paso_actual.mensaje && $json.paso_actual.mensaje.length > 0) ? $json.paso_actual.mensaje : 'Ese valor no es valido, intenta de nuevo.' }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "609f628f-1bc3-4e3c-90cd-3555331eb423",
+      "name": "Sub-workflow - Notificaciones Repregunta",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        416
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code - Preparar Sesion": {
+      "main": [
+        [
+          {
+            "node": "IF - Sin Pasos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Sin Pasos": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Direccion Retorno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch - Tipo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch - Tipo": {
+      "main": [
+        [
+          {
+            "node": "Code - Validar YesNo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code - Validar Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Notificaciones Form",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP - Logic Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar YesNo": {
+      "main": [
+        [
+          {
+            "node": "IF - Es Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar Text": {
+      "main": [
+        [
+          {
+            "node": "IF - Es Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Logic Handler": {
+      "main": [
+        [
+          {
+            "node": "Code - Fusionar Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Fusionar Logic": {
+      "main": [
+        [
+          {
+            "node": "IF - Es Valido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Es Valido": {
+      "main": [
+        [
+          {
+            "node": "Code - Shift y Guardar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Notificaciones Repregunta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Quedan Pasos": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Direccion Retorno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sub-workflow - Auto Llamada (Continuar Wizard)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Shift y Guardar": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Sesion Guardar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger - Procesador de Pasos": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Sesion Obtener",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Sesion Obtener": {
+      "main": [
+        [
+          {
+            "node": "Code - Preparar Sesion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Sesion Guardar": {
+      "main": [
+        [
+          {
+            "node": "IF - Quedan Pasos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4ccc3120-5808-445c-8801-eceb34abcdd5",
+  "meta": {
+    "instanceId": "98bf38eac937aa695b5f9e7c19686dd120519b65f5840d813595167290932874"
+  },
+  "nodeGroups": [],
+  "id": "sxR1FOWjwonaXpEp",
+  "tags": []
+}

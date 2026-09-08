@@ -1,0 +1,832 @@
+{
+  "name": "11 - Estudiante - Solicitar Tutoria (formulario)",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Solicitar Tutoria - Materia y Fecha",
+        "formDescription": "Elige la materia y la fecha en la que necesitas la tutoria.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Materia",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Matematicas"
+                  },
+                  {
+                    "option": "Fisica"
+                  },
+                  {
+                    "option": "Programacion"
+                  },
+                  {
+                    "option": "Quimica"
+                  },
+                  {
+                    "option": "Biologia"
+                  },
+                  {
+                    "option": "Ingles"
+                  },
+                  {
+                    "option": "Historia"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Fecha (formato AAAA-MM-DD)",
+              "fieldType": "date",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Buscar horarios",
+          "path": "solicitar-tutoria-form"
+        }
+      },
+      "id": "aae9943f-8faa-4862-b333-5e44bbf6e0fa",
+      "name": "Form - Materia y Fecha",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -2208,
+        16
+      ],
+      "webhookId": "89917940-833a-428d-b8c2-eddf18745c9e"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: {\n  telegram_user: $json.formQueryParameters && $json.formQueryParameters.telegram_user,\n  materia: $json['Materia'],\n  fecha: $json['Fecha (formato AAAA-MM-DD)']\n}};"
+      },
+      "id": "c44f9a71-9e5c-48c6-9208-277027658f5b",
+      "name": "Code - Capturar Pagina 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const hoy = new Date();\nhoy.setHours(0,0,0,0);\nconst fecha = new Date($json.fecha + 'T00:00:00');\nreturn { json: { ...$json, fechaValida: fecha.getTime() >= hoy.getTime() } };"
+      },
+      "id": "cc35e908-518f-445f-9f7f-0c8179bac1e0",
+      "name": "Code - Validar Fecha No Pasada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.fechaValida }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "09c1f073-0ae3-400b-902f-582de2e78279",
+      "name": "IF - Fecha Valida",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1536,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Fecha invalida",
+        "completionMessage": "La fecha que elegiste ya paso. Vuelve a intentarlo con una fecha de hoy en adelante.",
+        "options": {}
+      },
+      "id": "4abaf41c-b290-4960-9e3f-5c4c1ca2f8f7",
+      "name": "Form - Fecha Invalida",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -1312,
+        112
+      ],
+      "webhookId": "95d5b14c-fed6-44f1-b103-54915a5ebd75"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1Nt9igZTowBX3eaW"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "materia": "={{ $json.materia }}",
+            "fecha": "={{ $json.fecha }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "d0df59f8-1e88-46f3-9212-8840d9ce03e3",
+      "name": "Sub-workflow - Calcular Disponibilidad",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -1312,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1Qd9MRV9Nz_TardN4lOQjTHaFKWZewGtgejMuFdWFEEQ"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "options": {}
+      },
+      "id": "a4d4b900-57d0-4f20-a31d-62fda61e4a92",
+      "name": "Sheets - Get Tutores (Nombres)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1088,
+        -80
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1b7DDDvIFNETcgjH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const horarios = $('Sub-workflow - Calcular Disponibilidad').first().json.horarios || [];\nconst tutores = $input.all().map(i => i.json);\nconst idsUnicos = [...new Set(horarios.map(h => h.id_tutor))];\nconst opciones = idsUnicos.map(id => {\n  const t = tutores.find(t => t.id_tutor === id);\n  const nombre = t ? t.nombre : id;\n  return { option: `${nombre} (${id})` };\n});\nreturn [{ json: {\n  telegram_user: $('Code - Capturar Pagina 1').first().json.telegram_user,\n  materia: $('Code - Capturar Pagina 1').first().json.materia,\n  fecha: $('Code - Capturar Pagina 1').first().json.fecha,\n  opcionesTutor: opciones,\n  hayTutores: opciones.length > 0\n}}];"
+      },
+      "id": "02afc3cb-e9ff-44b3-84aa-781e229d739f",
+      "name": "Code - Construir Opciones Tutor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hayTutores }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cef1f101-4967-494c-ab78-8a78a7c0dd16",
+      "name": "IF - Hay Tutores",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "={{ [ { fieldLabel: 'Tutor', fieldType: 'dropdown', fieldOptions: { values: $json.opcionesTutor }, requiredField: true } ] }}",
+        "options": {
+          "formTitle": "Elige tutor",
+          "buttonLabel": "Ver horas"
+        }
+      },
+      "id": "df501fec-fd79-4ff0-8fa1-a5f4f737073b",
+      "name": "Form - Tutor",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -416,
+        -176
+      ],
+      "webhookId": "4c142e0f-ccb6-4a77-99ad-1b93291a2e77"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const seleccion = $json['Tutor'] || '';\nconst match = seleccion.match(/\\(([^)]+)\\)$/);\nconst id_tutor = match ? match[1] : null;\nconst horarios = $('Sub-workflow - Calcular Disponibilidad').first().json.horarios || [];\nconst horasDelTutor = horarios.filter(h => h.id_tutor === id_tutor).map(h => ({ option: h.hora }));\nreturn { json: {\n  telegram_user: $('Code - Capturar Pagina 1').first().json.telegram_user,\n  materia: $('Code - Capturar Pagina 1').first().json.materia,\n  fecha: $('Code - Capturar Pagina 1').first().json.fecha,\n  id_tutor,\n  opcionesHora: horasDelTutor\n}};"
+      },
+      "id": "329a6f92-4ce9-49b2-b054-ce5eafd2443a",
+      "name": "Code - Capturar Tutor Elegido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "defineForm": "json",
+        "jsonOutput": "={{ [ { fieldLabel: 'Hora', fieldType: 'dropdown', fieldOptions: { values: $json.opcionesHora }, requiredField: true } ] }}",
+        "options": {
+          "formTitle": "Elige la hora",
+          "buttonLabel": "Confirmar"
+        }
+      },
+      "id": "f1efc990-40c6-42d0-a780-dc1a7aa57566",
+      "name": "Form - Hora",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        32,
+        -176
+      ],
+      "webhookId": "40c9549b-5b60-4a8d-a84d-2f5203fb60b5"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: {\n  id_tutoria: 'TU-' + Date.now(),\n  telegram_user: $('Code - Capturar Tutor Elegido').first().json.telegram_user,\n  id_tutor: $('Code - Capturar Tutor Elegido').first().json.id_tutor,\n  materia: $('Code - Capturar Tutor Elegido').first().json.materia,\n  fecha: $('Code - Capturar Tutor Elegido').first().json.fecha,\n  hora: $json['Hora']\n}};"
+      },
+      "id": "b6e0ae02-ac36-46e0-9d1e-984583ff4a29",
+      "name": "Code - Preparar Tutoria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "10ZfjTJsPj0M5NJWTzbNYAFG-r8bWXLbmXxIQrz4DwmE"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_tutoria": "={{ $json.id_tutoria }}",
+            "id_estudiante": "={{ $json.telegram_user }}",
+            "id_tutor": "={{ $json.id_tutor }}",
+            "materia": "={{ $json.materia }}",
+            "fecha": "={{ $json.fecha }}",
+            "hora": "={{ $json.hora }}",
+            "estado": "Asignada"
+          },
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "id_tutoria",
+              "id": "id_tutoria",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "id_estudiante",
+              "id": "id_estudiante",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "id_tutor",
+              "id": "id_tutor",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "materia",
+              "id": "materia",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "fecha",
+              "id": "fecha",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "hora",
+              "id": "hora",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "estado",
+              "id": "estado",
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "displayName": "motivo_cierre",
+              "id": "motivo_cierre",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5fa4803d-f2ca-479a-89d4-39f90aea5a0e",
+      "name": "Sheets - Append TUTORIAS",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        -176
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1b7DDDvIFNETcgjH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1Qd9MRV9Nz_TardN4lOQjTHaFKWZewGtgejMuFdWFEEQ"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_tutor",
+              "lookupValue": "={{ $('Code - Preparar Tutoria').first().json.id_tutor }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ff225b0-e18f-43cc-b482-c4076b4a378a",
+      "name": "Sheets - Get Tutor (notificar)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        -176
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1b7DDDvIFNETcgjH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Tutoria solicitada",
+        "completionMessage": "Tu tutoria fue asignada. Te avisaremos por Telegram cuando el tutor confirme.",
+        "options": {}
+      },
+      "id": "a1e08027-0b95-4043-ae5b-56fd905785e1",
+      "name": "Form - Completado",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        1376,
+        -176
+      ],
+      "webhookId": "51ad0b47-af02-4a32-b579-9663672f0e50"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Sin horarios disponibles",
+        "completionMessage": "No hay tutores disponibles para esa materia y fecha. Intenta con otra fecha escribiendole de nuevo al bot.",
+        "options": {}
+      },
+      "id": "7e74bded-0890-4bc2-b3f8-b38f41eda64c",
+      "name": "Form - Sin Horarios",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -416,
+        16
+      ],
+      "webhookId": "c1039b24-8909-45b4-8272-c8a684e000c2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ucriG0ZjEfB7QzRC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "canal": "telegram_estudiante",
+            "destinatario": "={{ $('Code - Preparar Tutoria').first().json.telegram_user }}",
+            "mensaje": "={{ 'Tu solicitud de tutoria quedo registrada:\\n\\nMateria: ' + $('Code - Preparar Tutoria').first().json.materia + '\\nFecha: ' + $('Code - Preparar Tutoria').first().json.fecha + '\\nHora: ' + $('Code - Preparar Tutoria').first().json.hora + '\\n\\nEsperando que el tutor confirme. Te avisamos apenas responda.' }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "769d92d2-d006-4e7c-83b4-042085f87252",
+      "name": "Sub-workflow - Notificar Estudiante",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "ucriG0ZjEfB7QzRC"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [],
+          "value": {
+            "botones": "={{ [ {text:'Aceptar', callback_data:'aceptar:' + $('Code - Preparar Tutoria').first().json.id_tutoria}, {text:'Rechazar', callback_data:'rechazar:' + $('Code - Preparar Tutoria').first().json.id_tutoria} ] }}",
+            "canal": "telegram_tutor",
+            "destinatario": "={{ $('Sheets - Get Tutor (notificar)').first().json.telegram_user }}",
+            "mensaje": "={{ 'Tienes una nueva solicitud de tutoria:\\n\\nMateria: ' + $('Code - Preparar Tutoria').first().json.materia + '\\nFecha: ' + $('Code - Preparar Tutoria').first().json.fecha + '\\nHora: ' + $('Code - Preparar Tutoria').first().json.hora + '\\n\\nToca un boton para responder.' }}"
+          }
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "id": "49e5731a-5b6b-41fe-8641-4b53a04119bb",
+      "name": "Sub-workflow - Notificar Tutor",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const now = $now;\nconst dia = now.weekday; // 1 (Lunes) a 7 (Domingo)\nconst hora = now.hour; // 0 a 23\n\n// Lunes a Viernes\nconst esDiaLaboral = dia >= 1 && dia <= 5;\n\n// Rango de 08:00 AM a 06:00 PM (8 a 17 horas inclusive)\nconst esHoraLaboral = hora >= 8 && hora < 18;\n\nconst dentroDeHorario = esDiaLaboral && esHoraLaboral;\n\nreturn {\n  json: {\n    ...$json,\n    dentroDeHorario,\n  },\n};\n"
+      },
+      "id": "431795db-8792-4920-96c4-2d4d88b667e9",
+      "name": "Code - Validar Horario Atencion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.dentroDeHorario }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "id": "4dc0a56a-d294-475e-9a65-ea002c77991b"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "06e361e7-6fa1-402d-98dc-0cdee6be26b4",
+      "name": "IF - Dentro de Horario",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1536,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Coordinacion Cerrada",
+        "completionMessage": " Coordinación Cerrada. Nuestro horario de atención es de Lunes a Viernes, 8am a 6pm. ¡Escríbenos mañana!",
+        "options": {}
+      },
+      "id": "c5c6faef-8945-4d25-91d3-8e5a11b944d6",
+      "name": "Form - Fuera de Horario",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        -1312,
+        304
+      ],
+      "webhookId": "e7a8def5-9a34-467d-90cb-b9f433238169"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Form - Materia y Fecha": {
+      "main": [
+        [
+          {
+            "node": "Code - Capturar Pagina 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Capturar Pagina 1": {
+      "main": [
+        [
+          {
+            "node": "Code - Validar Horario Atencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar Fecha No Pasada": {
+      "main": [
+        [
+          {
+            "node": "IF - Fecha Valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Fecha Valida": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Calcular Disponibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form - Fecha Invalida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Calcular Disponibilidad": {
+      "main": [
+        [
+          {
+            "node": "Sheets - Get Tutores (Nombres)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets - Get Tutores (Nombres)": {
+      "main": [
+        [
+          {
+            "node": "Code - Construir Opciones Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Construir Opciones Tutor": {
+      "main": [
+        [
+          {
+            "node": "IF - Hay Tutores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Hay Tutores": {
+      "main": [
+        [
+          {
+            "node": "Form - Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form - Sin Horarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form - Tutor": {
+      "main": [
+        [
+          {
+            "node": "Code - Capturar Tutor Elegido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Capturar Tutor Elegido": {
+      "main": [
+        [
+          {
+            "node": "Form - Hora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form - Hora": {
+      "main": [
+        [
+          {
+            "node": "Code - Preparar Tutoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Preparar Tutoria": {
+      "main": [
+        [
+          {
+            "node": "Sheets - Append TUTORIAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets - Append TUTORIAS": {
+      "main": [
+        [
+          {
+            "node": "Sheets - Get Tutor (notificar)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets - Get Tutor (notificar)": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Notificar Estudiante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Notificar Estudiante": {
+      "main": [
+        [
+          {
+            "node": "Sub-workflow - Notificar Tutor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sub-workflow - Notificar Tutor": {
+      "main": [
+        [
+          {
+            "node": "Form - Completado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validar Horario Atencion": {
+      "main": [
+        [
+          {
+            "node": "IF - Dentro de Horario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Dentro de Horario": {
+      "main": [
+        [
+          {
+            "node": "Code - Validar Fecha No Pasada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Form - Fuera de Horario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1b6d6508-63c4-460b-a3eb-a4f2ce4f14a1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98bf38eac937aa695b5f9e7c19686dd120519b65f5840d813595167290932874"
+  },
+  "nodeGroups": [],
+  "id": "nJfoRa0DTlQeEGJG",
+  "tags": []
+}
